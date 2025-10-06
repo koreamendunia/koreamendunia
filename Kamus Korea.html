@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamus & Tata Bahasa Korea</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Icon Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .korean-text {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            background-size: 200% 200%;
+            animation: gradient-animation 10s ease infinite;
+        }
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #89f7fe; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #66a6ff; }
+        .btn-ai:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .spinner, .spinner-sm {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+        }
+        .spinner { width: 16px; height: 16px; margin-right: 8px; }
+        .spinner-sm { width: 14px; height: 14px; margin-right: 6px; border-width: 2px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #language-options {
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+        #language-options.hidden {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 14px 0 rgb(0 0 0 / 10%);
+        }
+        .option-btn {
+            transition: all 0.2s ease-out;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .option-btn.correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .option-btn.incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .chat-bubble { max-width: 80%; }
+        .bot-bubble { background-color: #e5e7eb; align-self: flex-start; }
+        .user-bubble { background-color: #3b82f6; color: white; align-self: flex-end; }
+        .flashcard {
+            perspective: 1000px;
+        }
+        .flashcard-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } 
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+
+    <div id="main-container" class="w-full max-w-md bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 transform transition-all duration-500 hover:scale-[1.02]">
+
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 korean-text">한국어 학습 도우미</h1>
+            <p class="text-gray-600">Asisten Belajar Bahasa Korea Mendunia</p>
+        </header>
+
+        <div class="mb-4 grid grid-cols-5 gap-1 p-1 bg-gray-200/70 rounded-xl">
+            <button id="tab-dictionary" class="tab-btn py-2 px-2 rounded-lg font-semibold text-xs sm:text-sm active"><i class="fa-solid fa-book-bookmark sm:mr-1"></i> Kamus</button>
+            <button id="tab-grammar" class="tab-btn py-2 px-2 rounded-lg font-semibold text-xs sm:text-sm"><i class="fa-solid fa-graduation-cap sm:mr-1"></i> Tata Bahasa</button>
+            <button id="tab-quiz" class="tab-btn py-2 px-2 rounded-lg font-semibold text-xs sm:text-sm"><i class="fa-solid fa-pen-to-square sm:mr-1"></i> Latihan</button>
+            <button id="tab-conversation" class="tab-btn py-2 px-2 rounded-lg font-semibold text-xs sm:text-sm"><i class="fa-solid fa-comments sm:mr-1"></i> Percakapan</button>
+            <button id="tab-my-words" class="tab-btn py-2 px-2 rounded-lg font-semibold text-xs sm:text-sm relative"><i class="fa-solid fa-star sm:mr-1"></i> Kata Saya <span id="my-words-counter" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span></button>
+        </div>
+
+        <div id="dictionary-view">
+             <div class="space-y-4">
+                <div class="relative">
+                    <input type="text" id="korean-input" placeholder="Ketik kata Korea (contoh: 사랑)" class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 text-lg">
+                    <i class="fa-solid fa-language absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                </div>
+                <div class="relative" id="custom-language-select">
+                     <button id="selected-language-btn" class="w-full flex items-center justify-between pl-4 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white">
+                        <div class="flex items-center">
+                            <img id="selected-flag" src="https://flagcdn.com/w20/id.png" alt="Bendera Indonesia" class="w-6 h-auto mr-3 rounded-sm shadow-sm">
+                            <span id="selected-lang-text" class="font-semibold text-gray-700">Bahasa Indonesia</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                    </button>
+                    <ul id="language-options" class="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto hidden"></ul>
+                </div>
+                <button id="translate-btn" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center btn-ai">
+                    <span id="btn-icon"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i></span>
+                    <span id="btn-text">Terjemahkan</span>
+                </button>
+            </div>
+            <div id="result-container" class="mt-8 hidden">
+                <div class="p-6 bg-sky-50 rounded-2xl border border-sky-200 relative">
+                     <button id="save-word-btn" class="absolute top-3 right-3 text-gray-400 hover:text-yellow-500 text-xl transition-colors"><i class="fa-regular fa-star"></i></button>
+                     <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Kata Asli</p>
+                            <div class="flex items-center gap-3">
+                                <h2 id="original-word" class="text-2xl font-bold text-gray-800 korean-text"></h2>
+                                <button id="listen-original-word-btn" title="Dengarkan Pengucapan" class="text-blue-500 hover:text-blue-700 transition-colors text-xl"><i class="fa-solid fa-volume-high"></i></button>
+                            </div>
+                        </div>
+                        <div><p class="text-sm text-gray-500">Romanisasi</p><p id="romanization" class="text-lg text-gray-700"></p></div>
+                        <div><p class="text-sm text-gray-500">Arti</p><p id="translation" class="text-lg font-semibold text-blue-600"></p></div>
+                        <div class="pt-4 border-t border-sky-200">
+                            <p class="text-sm text-gray-500">Contoh Kalimat</p>
+                             <div class="flex items-center gap-3">
+                                <p id="example-korean" class="text-lg text-gray-800 korean-text"></p>
+                                <button id="listen-example-btn" title="Dengarkan Pengucapan" class="text-blue-500 hover:text-blue-700 transition-colors text-lg"><i class="fa-solid fa-volume-high"></i></button>
+                            </div>
+                            <p id="example-translation" class="text-md text-gray-600 italic"></p>
+                        </div>
+                    </div>
+                </div>
+                <div id="ai-features" class="mt-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-200">
+                    <h3 class="text-center font-semibold text-indigo-800 mb-3">✨ Fitur AI Tambahan</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button id="generate-sentences-btn" class="w-full bg-indigo-500 text-white font-semibold py-2 px-3 text-sm rounded-lg hover:bg-indigo-600 active:scale-95 transition-all duration-300 shadow flex items-center justify-center btn-ai"><span class="btn-icon-sm"><i class="fa-solid fa-list-ol mr-2"></i></span><span class="btn-text-sm">Buat Contoh Kalimat</span></button>
+                        <button id="explain-nuance-btn" class="w-full bg-indigo-500 text-white font-semibold py-2 px-3 text-sm rounded-lg hover:bg-indigo-600 active:scale-95 transition-all duration-300 shadow flex items-center justify-center btn-ai"><span class="btn-icon-sm"><i class="fa-solid fa-lightbulb mr-2"></i></span><span class="btn-text-sm">Jelaskan Nuansa</span></button>
+                    </div>
+                </div>
+                <div id="extra-results-container" class="mt-4 p-5 bg-white rounded-2xl border border-gray-200 hidden"></div>
+            </div>
+        </div>
+
+        <div id="grammar-view" class="hidden">
+             <div class="text-center mb-4"><h2 class="text-xl font-bold text-gray-800">Pusat Tata Bahasa AI</h2><p class="text-gray-500 text-sm">Tanya tentang partikel, pola kalimat, dll.</p></div>
+             <div class="space-y-4">
+                 <textarea id="grammar-input" rows="4" placeholder="Contoh: Jelaskan penggunaan partikel -은/는 dan -이/가" class="w-full p-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-500 transition-all duration-300"></textarea>
+                 <button id="explain-grammar-btn" class="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl hover:bg-indigo-600 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center btn-ai"><span class="btn-icon-grammar"><i class="fa-solid fa-book-open-reader mr-2"></i></span><span class="btn-text-grammar">Jelaskan Tata Bahasa</span></button>
+             </div>
+            <div id="grammar-result-container" class="mt-6 hidden p-5 bg-indigo-50 rounded-2xl border border-indigo-200 max-h-[40vh] overflow-y-auto"></div>
+        </div>
+        
+        <div id="quiz-view" class="hidden">
+            <div id="quiz-setup-view">
+                 <div class="text-center mb-4"><h2 class="text-xl font-bold text-gray-800">Pusat Latihan</h2><p class="text-gray-500 text-sm">Uji pemahaman kosakatamu!</p></div>
+                 <div class="p-4 border-2 border-dashed border-purple-300 rounded-xl mb-4">
+                     <h3 class="font-bold text-purple-800 mb-2">Kuis Cerdas AI</h3>
+                     <p class="text-sm text-gray-600 mb-3">Masukkan topik, dan biarkan AI membuatkan soal untukmu.</p>
+                     <div class="flex gap-2">
+                         <input type="text" id="ai-quiz-topic" placeholder="Topik (cth: Hewan)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+                         <button id="generate-ai-quiz-btn" class="bg-purple-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-purple-600 active:scale-95 transition-all shadow btn-ai"><i class="fa-solid fa-brain"></i></button>
+                     </div>
+                 </div>
+                 <div class="p-4 border-2 border-dashed border-green-300 rounded-xl">
+                     <h3 class="font-bold text-green-800 mb-2">Buat Kuis Sendiri</h3>
+                     <p class="text-sm text-gray-600 mb-3">Tambahkan minimal 4 kata untuk memulai kuis buatanmu.</p>
+                     <div id="custom-quiz-form" class="space-y-2">
+                         <div class="flex gap-2"><input type="text" id="custom-korean-word" placeholder="Kata Korea" class="w-1/2 p-2 border rounded-md"><input type="text" id="custom-translation" placeholder="Artinya" class="w-1/2 p-2 border rounded-md"></div>
+                         <button id="add-word-btn" class="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 transition-all text-sm">Tambah Kata</button>
+                     </div>
+                     <div id="custom-word-list" class="mt-2 text-sm text-gray-600"></div>
+                     <button id="start-custom-quiz-btn" class="w-full bg-green-500 text-white font-bold py-2 rounded-lg hover:bg-green-600 active:scale-95 transition-all shadow mt-3 btn-ai" disabled>Mulai Kuis</button>
+                 </div>
+            </div>
+            <div id="quiz-active-view" class="hidden">
+                <div class="flex justify-between items-center mb-4"><p class="font-bold text-lg text-gray-700">Soal <span id="question-counter">1</span>/<span id="total-questions">5</span></p><p class="font-semibold text-gray-700">Skor: <span id="score-counter">0</span></p></div>
+                <div class="bg-gray-100 p-6 rounded-xl text-center mb-4"><p class="text-3xl font-bold korean-text" id="quiz-question-word"></p></div>
+                <div id="quiz-options-container" class="grid grid-cols-2 gap-3"></div>
+                <button id="next-question-btn" class="w-full bg-gray-500 text-white font-bold py-3 rounded-xl hover:bg-gray-600 active:scale-95 transition-all shadow-lg mt-4 hidden">Lanjut</button>
+            </div>
+            <div id="quiz-results-view" class="hidden text-center p-4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Kuis Selesai!</h2><p class="text-lg text-gray-600 mb-4">Skor Akhir Anda:</p><p class="text-5xl font-bold text-blue-600 mb-6" id="final-score"></p>
+                <button id="restart-quiz-btn" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-all shadow-lg">Buat Kuis Baru</button>
+            </div>
+        </div>
+        
+        <div id="conversation-view" class="hidden">
+            <div id="scenario-selection-view">
+                <div class="text-center mb-4"><h2 class="text-xl font-bold text-gray-800">Latihan Percakapan AI</h2><p class="text-gray-500 text-sm">Pilih skenario untuk mulai berlatih.</p></div>
+                <div class="space-y-3">
+                    <button data-scenario="Memesan Kopi" class="scenario-btn w-full text-left p-4 bg-white border-2 border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-400 transition-all flex items-center"><i class="fa-solid fa-mug-saucer text-yellow-600 text-2xl w-10"></i><div><h3 class="font-bold text-gray-800">Memesan Kopi</h3><p class="text-sm text-gray-500">Pesan minuman favoritmu di kafe.</p></div></button>
+                    <button data-scenario="Memperkenalkan Diri" class="scenario-btn w-full text-left p-4 bg-white border-2 border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all flex items-center"><i class="fa-solid fa-hand-wave text-green-600 text-2xl w-10"></i><div><h3 class="font-bold text-gray-800">Memperkenalkan Diri</h3><p class="text-sm text-gray-500">Sapa dan perkenalkan dirimu pada teman baru.</p></div></button>
+                    <button data-scenario="Menanyakan Arah" class="scenario-btn w-full text-left p-4 bg-white border-2 border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-all flex items-center"><i class="fa-solid fa-map-location-dot text-blue-600 text-2xl w-10"></i><div><h3 class="font-bold text-gray-800">Menanyakan Arah</h3><p class="text-sm text-gray-500">Tanyakan jalan ke lokasi tujuanmu.</p></div></button>
+                </div>
+            </div>
+            <div id="chat-view" class="hidden">
+                <div class="flex items-center justify-between mb-3"><button id="back-to-scenarios-btn" class="text-gray-600 hover:text-black"><i class="fa-solid fa-arrow-left mr-2"></i> Kembali</button><h3 id="chat-title" class="font-bold text-gray-800 text-lg"></h3></div>
+                <div id="chat-history" class="h-80 bg-gray-100 rounded-xl p-4 flex flex-col gap-3 overflow-y-auto mb-3"></div>
+                <div id="suggestion-container" class="flex gap-2 mb-3 overflow-x-auto pb-2"></div>
+                <div class="flex gap-2"><input type="text" id="chat-input" placeholder="Ketik balasanmu..." class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"><button id="send-chat-btn" class="bg-indigo-500 text-white font-bold px-5 py-2 rounded-xl hover:bg-indigo-600 active:scale-95 transition-all shadow btn-ai"><i class="fa-solid fa-paper-plane"></i></button></div>
+            </div>
+        </div>
+
+        <div id="my-words-view" class="hidden">
+            <div id="word-list-container">
+                <div class="text-center mb-4"><h2 class="text-xl font-bold text-gray-800">Daftar Kata Saya</h2><p class="text-gray-500 text-sm">Kata-kata yang kamu simpan untuk dipelajari.</p></div>
+                <div id="saved-words-list" class="space-y-2 max-h-80 overflow-y-auto pr-2"></div>
+                <div id="no-words-message" class="text-center py-10 text-gray-500"><i class="fa-solid fa-folder-open text-4xl mb-3"></i><p>Kamu belum menyimpan kata apapun.</p><p class="text-sm">Cari kata di tab 'Kamus' dan klik ikon bintang untuk menyimpannya.</p></div>
+                <button id="start-flashcard-btn" class="w-full bg-orange-500 text-white font-bold py-3 rounded-xl hover:bg-orange-600 active:scale-95 transition-all shadow-lg mt-4 btn-ai"><i class="fa-solid fa-layer-group mr-2"></i> Mulai Latihan Flashcard</button>
+            </div>
+            <div id="flashcard-container" class="hidden">
+                <div class="flex justify-between items-center mb-3"><button id="back-to-word-list-btn" class="text-gray-600 hover:text-black"><i class="fa-solid fa-arrow-left mr-2"></i> Daftar Kata</button><p class="font-semibold text-gray-700"><span id="flashcard-counter">1</span> / <span id="flashcard-total">0</span></p></div>
+                <div class="flashcard h-56 mb-4">
+                    <div class="flashcard-inner relative w-full h-full">
+                        <div class="flashcard-front absolute w-full h-full bg-gray-100 rounded-xl flex items-center justify-center p-4"><p id="flashcard-korean" class="text-4xl font-bold korean-text text-center"></p></div>
+                        <div class="flashcard-back absolute w-full h-full bg-sky-100 rounded-xl flex flex-col items-center justify-center p-4"><p id="flashcard-translation" class="text-2xl font-semibold text-sky-800 text-center"></p><p id="flashcard-romanization" class="text-lg text-gray-600 mt-2"></p></div>
+                    </div>
+                </div>
+                <div id="flashcard-actions-initial"><button id="show-answer-btn" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-all shadow-lg">Tampilkan Jawaban</button></div>
+                <div id="flashcard-actions-feedback" class="hidden grid grid-cols-2 gap-3">
+                    <button id="repeat-btn" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 active:scale-95 transition-all shadow-lg flex items-center justify-center"><i class="fa-solid fa-rotate-right mr-2"></i> Ulangi Lagi</button>
+                    <button id="remembered-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 active:scale-95 transition-all shadow-lg flex items-center justify-center"><i class="fa-solid fa-check mr-2"></i> Sudah Ingat</button>
+                </div>
+            </div>
+             <div id="flashcard-finished-view" class="hidden text-center p-4">
+                <i class="fa-solid fa-award text-5xl text-yellow-500 mb-4"></i><h2 class="text-2xl font-bold text-gray-800 mb-2">Sesi Selesai!</h2><p class="text-lg text-gray-600 mb-6">Kerja bagus! Teruslah berlatih.</p>
+                <button id="restart-flashcard-btn" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-all shadow-lg">Latihan Lagi</button>
+            </div>
+        </div>
+        
+        <div id="error-message" class="mt-6 text-center text-red-600 font-semibold hidden"></div>
+    </div>
+
+    <script>
+        // --- KONFIGURASI PENTING ---
+        // Ganti nilai di bawah ini dengan API Key Anda dari Google AI Studio.
+        const GEMINI_API_KEY = "AIzaSyCbQplcfyTVBQdiTLFiYOc_V9xEUhuXxI4";
+
+        // --- STATE & GLOBAL VARIABLES ---
+        const languageMap = { id: { name: "Bahasa Indonesia", code: "id" }, en: { name: "English", code: "gb" }, es: { name: "Español", code: "es" }, jp: { name: "日本語", code: "jp" }, fr: { name: "Français", code: "fr" }, de: { name: "Deutsch", code: "de" }, it: { name: "Italiano", code: "it" }, pt: { name: "Português", code: "pt" }, ru: { name: "Русский", code: "ru" }, zh: { name: "中文", code: "cn" }, ar: { name: "العربية", code: "sa" }, hi: { name: "हिन्दी", code: "in" }, vi: { name: "Tiếng Việt", code: "vn" }, tr: { name: "Türkçe", code: "tr" }, nl: { name: "Nederlands", code: "nl" }, pl: { name: "Polski", code: "pl" }, sv: { name: "Svenska", code: "se" }, ko: { name: "한국어", code: "kr" }, th: { name: "ภาษาไทย", code: "th" }, fil: { name: "Filipino", code: "ph" } };
+        let savedWords = [];
+        let flashcardDeck = [];
+        let customWords = [];
+        let quizQuestions = [];
+        let conversationHistory = [];
+        let currentLang = 'id';
+        let currentWord = "";
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentFlashcardIndex = 0;
+        let koreanVoice = null;
+
+        // --- DOM ELEMENT DECLARATIONS ---
+        let mainContainer, errorMessage, tabs, koreanInput, translateBtn, resultContainer, originalWordEl, romanizationEl, translationEl, exampleKoreanEl, exampleTranslationEl, generateSentencesBtn, explainNuanceBtn, extraResultsContainer, customSelect, selectedBtn, selectedFlag, selectedLangText, langOptions, chevronIcon, listenOriginalWordBtn, listenExampleBtn, saveWordBtn, grammarInput, explainGrammarBtn, grammarResultContainer, quizSetupView, quizActiveView, quizResultsView, aiQuizTopic, generateAiQuizBtn, customKoreanWord, customTranslation, addWordBtn, customWordList, startCustomQuizBtn, questionCounterEl, totalQuestionsEl, scoreCounterEl, quizQuestionWordEl, quizOptionsContainer, nextQuestionBtn, finalScoreEl, restartQuizBtn, scenarioSelectionView, chatView, scenarioButtons, chatTitle, chatHistoryEl, suggestionContainer, chatInput, sendChatBtn, backToScenariosBtn, myWordsCounter, wordListContainer, savedWordsListEl, noWordsMessage, startFlashcardBtn, flashcardContainer, backToWordListBtn, flashcardCounterEl, flashcardTotalEl, flashcardEl, flashcardKoreanEl, flashcardTranslationEl, flashcardRomanizationEl, flashcardActionsInitial, showAnswerBtn, flashcardActionsFeedback, repeatBtn, rememberedBtn, flashcardFinishedView, restartFlashcardBtn;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM ELEMENT ASSIGNMENTS ---
+            mainContainer = document.getElementById('main-container');
+            errorMessage = document.getElementById('error-message');
+            tabs = {
+                dictionary: { btn: document.getElementById('tab-dictionary'), view: document.getElementById('dictionary-view') },
+                grammar: { btn: document.getElementById('tab-grammar'), view: document.getElementById('grammar-view') },
+                quiz: { btn: document.getElementById('tab-quiz'), view: document.getElementById('quiz-view') },
+                conversation: { btn: document.getElementById('tab-conversation'), view: document.getElementById('conversation-view') },
+                myWords: { btn: document.getElementById('tab-my-words'), view: document.getElementById('my-words-view') }
+            };
+            koreanInput = document.getElementById('korean-input');
+            translateBtn = document.getElementById('translate-btn');
+            resultContainer = document.getElementById('result-container');
+            originalWordEl = document.getElementById("original-word");
+            romanizationEl = document.getElementById("romanization");
+            translationEl = document.getElementById("translation");
+            exampleKoreanEl = document.getElementById("example-korean");
+            exampleTranslationEl = document.getElementById("example-translation");
+            generateSentencesBtn = document.getElementById("generate-sentences-btn");
+            explainNuanceBtn = document.getElementById("explain-nuance-btn");
+            extraResultsContainer = document.getElementById("extra-results-container");
+            customSelect = document.getElementById("custom-language-select");
+            selectedBtn = document.getElementById("selected-language-btn");
+            selectedFlag = document.getElementById("selected-flag");
+            selectedLangText = document.getElementById("selected-lang-text");
+            langOptions = document.getElementById("language-options");
+            chevronIcon = selectedBtn.querySelector("i");
+            listenOriginalWordBtn = document.getElementById('listen-original-word-btn');
+            listenExampleBtn = document.getElementById('listen-example-btn');
+            saveWordBtn = document.getElementById('save-word-btn');
+            grammarInput = document.getElementById("grammar-input");
+            explainGrammarBtn = document.getElementById("explain-grammar-btn");
+            grammarResultContainer = document.getElementById("grammar-result-container");
+            quizSetupView = document.getElementById('quiz-setup-view');
+            quizActiveView = document.getElementById('quiz-active-view');
+            quizResultsView = document.getElementById('quiz-results-view');
+            aiQuizTopic = document.getElementById('ai-quiz-topic');
+            generateAiQuizBtn = document.getElementById('generate-ai-quiz-btn');
+            customKoreanWord = document.getElementById('custom-korean-word');
+            customTranslation = document.getElementById('custom-translation');
+            addWordBtn = document.getElementById('add-word-btn');
+            customWordList = document.getElementById('custom-word-list');
+            startCustomQuizBtn = document.getElementById('start-custom-quiz-btn');
+            questionCounterEl = document.getElementById('question-counter');
+            totalQuestionsEl = document.getElementById('total-questions');
+            scoreCounterEl = document.getElementById('score-counter');
+            quizQuestionWordEl = document.getElementById('quiz-question-word');
+            quizOptionsContainer = document.getElementById('quiz-options-container');
+            nextQuestionBtn = document.getElementById('next-question-btn');
+            finalScoreEl = document.getElementById('final-score');
+            restartQuizBtn = document.getElementById('restart-quiz-btn');
+            scenarioSelectionView = document.getElementById('scenario-selection-view');
+            chatView = document.getElementById('chat-view');
+            scenarioButtons = document.querySelectorAll('.scenario-btn');
+            chatTitle = document.getElementById('chat-title');
+            chatHistoryEl = document.getElementById('chat-history');
+            suggestionContainer = document.getElementById('suggestion-container');
+            chatInput = document.getElementById('chat-input');
+            sendChatBtn = document.getElementById('send-chat-btn');
+            backToScenariosBtn = document.getElementById('back-to-scenarios-btn');
+            myWordsCounter = document.getElementById('my-words-counter');
+            wordListContainer = document.getElementById('word-list-container');
+            savedWordsListEl = document.getElementById('saved-words-list');
+            noWordsMessage = document.getElementById('no-words-message');
+            startFlashcardBtn = document.getElementById('start-flashcard-btn');
+            flashcardContainer = document.getElementById('flashcard-container');
+            backToWordListBtn = document.getElementById('back-to-word-list-btn');
+            flashcardCounterEl = document.getElementById('flashcard-counter');
+            flashcardTotalEl = document.getElementById('flashcard-total');
+            flashcardEl = document.querySelector('.flashcard');
+            flashcardKoreanEl = document.getElementById('flashcard-korean');
+            flashcardTranslationEl = document.getElementById('flashcard-translation');
+            flashcardRomanizationEl = document.getElementById('flashcard-romanization');
+            flashcardActionsInitial = document.getElementById('flashcard-actions-initial');
+            showAnswerBtn = document.getElementById('show-answer-btn');
+            flashcardActionsFeedback = document.getElementById('flashcard-actions-feedback');
+            repeatBtn = document.getElementById('repeat-btn');
+            rememberedBtn = document.getElementById('remembered-btn');
+            flashcardFinishedView = document.getElementById('flashcard-finished-view');
+            restartFlashcardBtn = document.getElementById('restart-flashcard-btn');
+
+            // --- ATTACH EVENT LISTENERS ---
+            Object.keys(tabs).forEach(key => {
+                tabs[key].btn.addEventListener('click', () => {
+                    Object.values(tabs).forEach(tab => {
+                        tab.btn.classList.remove('active');
+                        tab.view.style.display = 'none';
+                    });
+                    tabs[key].btn.classList.add('active');
+                    tabs[key].view.style.display = 'block';
+                    if (key === 'myWords') renderSavedWords();
+                });
+            });
+            translateBtn.addEventListener("click", translate);
+            koreanInput.addEventListener("keypress", event => { if (event.key === "Enter") translate(); });
+            generateSentencesBtn.addEventListener("click", generateMoreSentences);
+            explainNuanceBtn.addEventListener("click", explainNuance);
+            listenOriginalWordBtn.addEventListener('click', () => speak(originalWordEl.textContent));
+            listenExampleBtn.addEventListener('click', () => speak(exampleKoreanEl.textContent));
+            selectedBtn.addEventListener("click", () => { langOptions.classList.toggle("hidden"); chevronIcon.classList.toggle("rotate-180"); });
+            langOptions.addEventListener("click", e => {
+                const li = e.target.closest("li");
+                if (li) {
+                    currentLang = li.dataset.value;
+                    const langData = languageMap[currentLang];
+                    selectedFlag.src = `https://flagcdn.com/w20/${langData.code}.png`;
+                    selectedLangText.textContent = langData.name;
+                    langOptions.classList.add("hidden");
+                    chevronIcon.classList.remove("rotate-180");
+                }
+            });
+            document.addEventListener("click", e => { if (!customSelect.contains(e.target)) { langOptions.classList.add("hidden"); chevronIcon.classList.remove("rotate-180"); } });
+            explainGrammarBtn.addEventListener("click", getGrammarExplanation);
+            generateAiQuizBtn.addEventListener('click', handleAiQuizGeneration);
+            addWordBtn.addEventListener('click', () => {
+                const korean = customKoreanWord.value.trim();
+                const translation = customTranslation.value.trim();
+                if (korean && translation) {
+                    customWords.push({ koreanWord: korean, correctAnswer: translation });
+                    customKoreanWord.value = ''; customTranslation.value = ''; updateWordList(); customKoreanWord.focus();
+                }
+            });
+            startCustomQuizBtn.addEventListener('click', () => { const questions = generateQuestionsFromList(customWords); startQuiz(questions); });
+            nextQuestionBtn.addEventListener('click', () => { currentQuestionIndex++; displayQuestion(); });
+            restartQuizBtn.addEventListener('click', () => { quizResultsView.classList.add('hidden'); quizSetupView.classList.remove('hidden'); customWords = []; updateWordList(); });
+            scenarioButtons.forEach(btn => { btn.addEventListener('click', () => { const scenario = btn.dataset.scenario; startConversation(scenario); }); });
+            sendChatBtn.addEventListener('click', handleUserMessage);
+            chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleUserMessage(); });
+            backToScenariosBtn.addEventListener('click', backToScenarios);
+            saveWordBtn.addEventListener('click', handleSaveWord);
+            startFlashcardBtn.addEventListener('click', startFlashcardSession);
+            showAnswerBtn.addEventListener('click', () => { flashcardEl.classList.add('flipped'); flashcardActionsInitial.classList.add('hidden'); flashcardActionsFeedback.classList.remove('hidden'); });
+            backToWordListBtn.addEventListener('click', () => { flashcardContainer.classList.add('hidden'); flashcardFinishedView.classList.add('hidden'); wordListContainer.classList.remove('hidden'); renderSavedWords(); });
+            rememberedBtn.addEventListener('click', () => nextFlashcard(false));
+            repeatBtn.addEventListener('click', () => nextFlashcard(true));
+            restartFlashcardBtn.addEventListener('click', () => { flashcardFinishedView.classList.add('hidden'); wordListContainer.classList.remove('hidden'); renderSavedWords(); });
+            savedWordsListEl.addEventListener('click', (e) => {
+                if (e.target.closest('.delete-word-btn')) {
+                    const button = e.target.closest('.delete-word-btn'); const index = parseInt(button.dataset.index, 10);
+                    savedWords.splice(index, 1); renderSavedWords(); updateMyWordsCounter();
+                }
+            });
+
+            // --- INITIALIZE APP ---
+            initializeApp();
+        });
+
+        function initializeApp() {
+            if (GEMINI_API_KEY === "GANTI_DENGAN_API_KEY_ANDA") {
+                mainContainer.innerHTML = `
+                    <div class="text-center">
+                        <h1 class="text-2xl font-bold text-red-600 mb-4"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Konfigurasi Diperlukan</h1>
+                        <p class="text-gray-700">Harap masukkan API Key Gemini Anda di dalam file HTML agar aplikasi dapat berfungsi.</p>
+                        <p class="text-sm text-gray-500 mt-2">Buka file <code>kamus-korea.html</code>, cari variabel <strong>GEMINI_API_KEY</strong>, dan ganti nilainya dengan kunci API Anda yang valid.</p>
+                    </div>
+                `;
+                return;
+            }
+            populateLanguages();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+            Object.values(tabs).forEach((tab, index) => { if(index !== 0) tab.view.style.display = 'none'; });
+        }
+
+        // --- HELPER FUNCTIONS ---
+        function showError(message) { errorMessage.textContent = message; errorMessage.classList.remove('hidden'); }
+        function setLoadingState(button, isLoading, loadingText = "Memuat...") {
+            if (isLoading) {
+                button.dataset.originalContent = button.innerHTML; button.disabled = true;
+                let spinnerClass = button.offsetWidth < 150 && button.offsetHeight < 50 ? 'spinner-sm' : 'spinner';
+                let textSpan = (loadingText && button.offsetWidth > 60) ? `<span>${loadingText}</span>` : '';
+                button.innerHTML = `<div class="${spinnerClass}" style="border-top-color: white; margin-right: ${textSpan ? '8px' : '0'};"></div>${textSpan}`;
+                button.classList.add('flex', 'items-center', 'justify-center');
+            } else {
+                if (button.dataset.originalContent) button.innerHTML = button.dataset.originalContent;
+                button.disabled = false; delete button.dataset.originalContent;
+                button.classList.remove('flex', 'items-center', 'justify-center');
+            }
+        }
+        async function callGemini(prompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const result = await response.json();
+            if (!response.ok) { const errorDetails = result?.error?.message || "Tidak ada detail tambahan."; console.error("API Error Response:", result); throw new Error(`Kesalahan API (${response.status}): ${errorDetails}`); }
+            const candidate = result.candidates?.[0];
+            if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                if (result.promptFeedback?.blockReason) throw new Error(`Permintaan diblokir: ${result.promptFeedback.blockReason}`);
+                if (candidate?.finishReason && candidate.finishReason !== 'STOP') throw new Error(`Proses AI berhenti: ${candidate.finishReason}`);
+                throw new Error("Gagal mendapatkan respons dari AI (konten kosong).");
+            }
+            return candidate.content.parts[0].text;
+        }
+        function parseJsonFromAiResponse(rawText) { const jsonMatch = rawText.match(/\{[\s\S]*\}/); if (!jsonMatch) { console.error("Invalid response from AI:", rawText); throw new Error("Respons AI tidak valid."); } return JSON.parse(jsonMatch[0]); }
+
+        // --- AUDIO FUNCTIONS ---
+        function loadVoices() { const voices = window.speechSynthesis.getVoices(); koreanVoice = voices.find(voice => voice.lang === 'ko-KR') || voices.find(voice => voice.lang.startsWith('ko')); }
+        function speak(text) { if (!text || typeof text !== 'string' || text.trim() === '') return; if (speechSynthesis.speaking) speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); if (koreanVoice) utterance.voice = koreanVoice; else utterance.lang = 'ko-KR'; utterance.rate = 0.9; window.speechSynthesis.speak(utterance); }
+
+        // --- DICTIONARY FUNCTIONS ---
+        function populateLanguages() { langOptions.innerHTML = ""; for (const [langCode, langData] of Object.entries(languageMap)) { const li = document.createElement("li"); li.className = "px-4 py-3 hover:bg-sky-100 cursor-pointer flex items-center transition-colors duration-200"; li.dataset.value = langCode; li.innerHTML = `<img src="https://flagcdn.com/w20/${langData.code}.png" alt="Bendera ${langData.name}" class="w-6 h-auto mr-3 rounded-sm shadow-sm"><span class="text-gray-700">${langData.name}</span>`; langOptions.appendChild(li); } }
+        async function translate() {
+            const word = koreanInput.value.trim(); if (!word) { showError("Silakan masukkan kata Korea."); return; }
+            currentWord = word; const fullLanguageName = languageMap[currentLang].name;
+            resultContainer.classList.add("hidden"); errorMessage.classList.add("hidden"); extraResultsContainer.classList.add("hidden"); extraResultsContainer.innerHTML = "";
+            setLoadingState(translateBtn, true, "Menerjemahkan...");
+            try {
+                const prompt = `For the Korean word "${word}", provide a JSON object with: "romanization", "translation" in ${fullLanguageName}, "exampleKorean", and "exampleTranslation" in ${fullLanguageName}. Return only the JSON object.`;
+                const rawText = await callGemini(prompt); const data = parseJsonFromAiResponse(rawText);
+                originalWordEl.textContent = word; romanizationEl.textContent = data.romanization || "N/A"; translationEl.textContent = data.translation || "N/A"; exampleKoreanEl.textContent = data.exampleKorean || "N/A"; exampleTranslationEl.textContent = data.exampleTranslation || "N/A";
+                resultContainer.classList.add('animate-fade-in'); resultContainer.classList.remove("hidden");
+                updateSaveButtonState();
+            } catch (error) { showError(`Terjadi kesalahan: ${error.message}`); } finally { setLoadingState(translateBtn, false); }
+        }
+        async function generateMoreSentences() {
+            if (!currentWord) return; const fullLanguageName = languageMap[currentLang].name;
+            setLoadingState(generateSentencesBtn, true, "Membuat..."); extraResultsContainer.innerHTML = '';
+            try {
+                const prompt = `For "${currentWord}", create a JSON object with a key "sentences" containing 3 unique example sentences. Each object should have "korean" and "translation" in ${fullLanguageName}. Return only JSON.`;
+                const rawText = await callGemini(prompt); const data = parseJsonFromAiResponse(rawText);
+                if (data && Array.isArray(data.sentences)) { let html = '<h4 class="font-bold text-gray-800 mb-2">Contoh Kalimat Lainnya:</h4><ul class="space-y-3 list-decimal list-inside">'; data.sentences.forEach(item => { html += `<li class="text-gray-700"><span class="korean-text">${item.korean}</span><br><em class="text-sm text-gray-500">${item.translation}</em></li>`; }); html += '</ul>'; extraResultsContainer.innerHTML = html; extraResultsContainer.classList.remove('hidden'); } 
+                else { throw new Error("Respons AI tidak memiliki format yang diharapkan."); }
+            } catch (error) { showError(`Gagal membuat kalimat: ${error.message}`); } finally { setLoadingState(generateSentencesBtn, false); }
+        }
+        async function explainNuance() {
+            if (!currentWord) return; const fullLanguageName = languageMap[currentLang].name;
+            setLoadingState(explainNuanceBtn, true, "Menjelaskan..."); extraResultsContainer.innerHTML = '';
+            try {
+                const prompt = `As a friendly Korean tutor, explain the nuance of "${currentWord}" in ${fullLanguageName}. Use simple paragraph tags.`;
+                const explanation = await callGemini(prompt);
+                extraResultsContainer.innerHTML = `<h4 class="font-bold text-gray-800 mb-2">Penjelasan Nuansa:</h4><div class="prose prose-sm max-w-none text-gray-700">${explanation}</div>`;
+                extraResultsContainer.classList.remove('hidden');
+            } catch (error) { showError(`Gagal menjelaskan nuansa: ${error.message}`); } finally { setLoadingState(explainNuanceBtn, false); }
+        }
+        function updateSaveButtonState() { const isSaved = savedWords.some(w => w.korean === currentWord); if (isSaved) { saveWordBtn.innerHTML = '<i class="fa-solid fa-star text-yellow-500"></i>'; saveWordBtn.title = 'Hapus dari Kata Saya'; } else { saveWordBtn.innerHTML = '<i class="fa-regular fa-star"></i>'; saveWordBtn.title = 'Simpan ke Kata Saya'; } }
+        function handleSaveWord() { const existingWordIndex = savedWords.findIndex(w => w.korean === currentWord); if (existingWordIndex > -1) savedWords.splice(existingWordIndex, 1); else { savedWords.push({ korean: originalWordEl.textContent, translation: translationEl.textContent, romanization: romanizationEl.textContent }); } updateSaveButtonState(); updateMyWordsCounter(); }
+
+        // --- GRAMMAR FUNCTIONS ---
+        async function getGrammarExplanation() {
+            const question = grammarInput.value.trim(); if (!question) { showError("Silakan masukkan pertanyaan tata bahasa."); return; } const fullLanguageName = languageMap[currentLang].name;
+            grammarResultContainer.classList.add("hidden"); errorMessage.classList.add("hidden"); setLoadingState(explainGrammarBtn, true, "Menjelaskan...");
+            try {
+                const prompt = `As an expert Korean tutor, explain "${question}" in ${fullLanguageName}. Use HTML like <p>, <strong>, <ul>, <li>. Provide 2 examples.`;
+                const explanation = await callGemini(prompt);
+                grammarResultContainer.innerHTML = `<div class="prose prose-sm max-w-none text-gray-700">${explanation}</div>`;
+                grammarResultContainer.classList.add('animate-fade-in'); grammarResultContainer.classList.remove("hidden");
+            } catch (error) { showError(`Gagal menjelaskan tata bahasa: ${error.message}`); } finally { setLoadingState(explainGrammarBtn, false); }
+        }
+        
+        // --- QUIZ FUNCTIONS ---
+        function startQuiz(questions) { quizQuestions = questions; currentQuestionIndex = 0; score = 0; quizSetupView.classList.add('hidden'); quizResultsView.classList.add('hidden'); quizActiveView.classList.remove('hidden'); displayQuestion(); }
+        function displayQuestion() {
+            if (currentQuestionIndex >= quizQuestions.length) { showResults(); return; }
+            nextQuestionBtn.classList.add('hidden'); const currentQuestion = quizQuestions[currentQuestionIndex];
+            questionCounterEl.textContent = currentQuestionIndex + 1; totalQuestionsEl.textContent = quizQuestions.length; scoreCounterEl.textContent = score;
+            quizQuestionWordEl.textContent = currentQuestion.koreanWord; quizOptionsContainer.innerHTML = '';
+            currentQuestion.options.forEach(option => { const button = document.createElement('button'); button.textContent = option; button.className = 'option-btn w-full bg-white text-gray-700 font-semibold p-3 rounded-lg border-2 border-gray-200'; button.onclick = () => checkAnswer(option, button); quizOptionsContainer.appendChild(button); });
+        }
+        function checkAnswer(selectedAnswer, button) {
+            const currentQuestion = quizQuestions[currentQuestionIndex]; const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+            Array.from(quizOptionsContainer.children).forEach(btn => { btn.disabled = true; if(btn.textContent === currentQuestion.correctAnswer) btn.classList.add('correct'); });
+            if (isCorrect) { score++; scoreCounterEl.textContent = score; } else { button.classList.add('incorrect'); }
+            nextQuestionBtn.classList.remove('hidden');
+        }
+        function showResults() { quizActiveView.classList.add('hidden'); quizResultsView.classList.remove('hidden'); finalScoreEl.textContent = `${score} / ${quizQuestions.length}`; }
+        async function handleAiQuizGeneration() {
+            const topic = aiQuizTopic.value.trim(); if (!topic) { showError("Silakan masukkan topik kuis."); return; }
+            setLoadingState(generateAiQuizBtn, true, null); errorMessage.classList.add('hidden');
+            try {
+                const fullLanguageName = languageMap[currentLang].name; const prompt = `Create a 5-question multiple-choice quiz on "${topic}". Generate a JSON object with key "questions". Each question needs "koreanWord", "options" (array of 4 ${fullLanguageName} words), and "correctAnswer". Only return JSON.`;
+                const rawText = await callGemini(prompt); const data = parseJsonFromAiResponse(rawText);
+                if (data && Array.isArray(data.questions) && data.questions.length > 0) startQuiz(data.questions);
+                else throw new Error("Format respons AI untuk kuis tidak valid.");
+            } catch (error) { showError(`Gagal membuat kuis AI: ${error.message}`); } finally { setLoadingState(generateAiQuizBtn, false); }
+        }
+        function generateQuestionsFromList(wordList) {
+            const shuffledList = [...wordList].sort(() => 0.5 - Math.random());
+            return shuffledList.map(wordObj => {
+                const correctAnswer = wordObj.correctAnswer;
+                const distractors = wordList.filter(w => w.correctAnswer !== correctAnswer).sort(() => 0.5 - Math.random()).slice(0, 3).map(w => w.correctAnswer);
+                const options = [correctAnswer, ...distractors].sort(() => 0.5 - Math.random());
+                return { koreanWord: wordObj.koreanWord, options: options, correctAnswer: correctAnswer };
+            });
+        }
+        function updateWordList() { customWordList.innerHTML = `Kata ditambahkan: <strong>${customWords.length}</strong>`; startCustomQuizBtn.disabled = customWords.length < 4; }
+
+        // --- CONVERSATION FUNCTIONS ---
+        async function startConversation(scenario) {
+            scenarioSelectionView.classList.add('hidden'); chatView.classList.remove('hidden');
+            chatTitle.textContent = scenario; chatHistoryEl.innerHTML = '<div class="self-center text-sm text-gray-500">AI sedang mengetik...</div>'; suggestionContainer.innerHTML = ""; conversationHistory = [];
+            try {
+                const fullLanguageName = languageMap[currentLang].name;
+                const persona = scenario === "Memesan Kopi" ? "seorang barista" : (scenario === "Memperkenalkan Diri" ? "seseorang yang baru ditemui" : "seorang pejalan kaki");
+                const prompt = `Role-play as a ${persona} in Korea. Start a conversation for the "${scenario}" scenario. Provide your first line in JSON with: "botReplyKorean", "botReplyTranslation" in ${fullLanguageName}, "romanization", and "userSuggestions" (array of 3 simple replies). Respond only with the valid JSON object.`;
+                const rawText = await callGemini(prompt); const data = parseJsonFromAiResponse(rawText);
+                conversationHistory.push({ role: 'bot', text: data.botReplyKorean });
+                chatHistoryEl.innerHTML = ''; displayBotMessage(data);
+            } catch(error) { showError(`Gagal memulai percakapan: ${error.message}`); backToScenarios(); }
+        }
+        function displayBotMessage(data) {
+            const botBubble = document.createElement('div'); botBubble.className = 'chat-bubble bot-bubble p-3 rounded-xl animate-fade-in';
+            botBubble.innerHTML = `<p class="korean-text font-semibold">${data.botReplyKorean}</p><p class="text-xs text-gray-500 italic mt-1">${data.romanization}</p><p class="text-sm text-gray-600 mt-2">${data.botReplyTranslation}</p>`;
+            const listenBtn = document.createElement('button'); listenBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; listenBtn.className = "text-blue-500 hover:text-blue-700 transition-colors text-sm ml-2"; listenBtn.onclick = () => speak(data.botReplyKorean);
+            const pKorean = botBubble.querySelector('.korean-text'); pKorean.parentNode.insertBefore(listenBtn, pKorean.nextSibling);
+            chatHistoryEl.appendChild(botBubble); chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight; suggestionContainer.innerHTML = '';
+            if (data.userSuggestions && Array.isArray(data.userSuggestions)) {
+                data.userSuggestions.forEach(suggestion => { const suggBtn = document.createElement('button'); suggBtn.textContent = suggestion; suggBtn.className = 'suggestion-btn korean-text bg-gray-200 text-gray-700 text-sm px-3 py-1 rounded-full whitespace-nowrap hover:bg-gray-300'; suggBtn.onclick = () => { chatInput.value = suggestion; handleUserMessage(); }; suggestionContainer.appendChild(suggBtn); });
+            }
+        }
+        async function handleUserMessage() {
+            const userText = chatInput.value.trim(); if (!userText) return; chatInput.value = ''; suggestionContainer.innerHTML = '';
+            const userBubble = document.createElement('div'); userBubble.className = 'chat-bubble user-bubble p-3 rounded-xl animate-fade-in'; userBubble.innerHTML = `<p class="korean-text">${userText}</p>`;
+            chatHistoryEl.appendChild(userBubble); chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+            conversationHistory.push({ role: 'user', text: userText });
+            const thinkingBubble = document.createElement('div'); thinkingBubble.className = 'self-center text-sm text-gray-500'; thinkingBubble.textContent = 'AI sedang mengetik...';
+            chatHistoryEl.appendChild(thinkingBubble); chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+            try {
+                const fullLanguageName = languageMap[currentLang].name;
+                const persona = chatTitle.textContent === "Memesan Kopi" ? "seorang barista" : (chatTitle.textContent === "Memperkenalkan Diri" ? "seseorang yang baru ditemui" : "seorang pejalan kaki");
+                let historyPrompt = ""; conversationHistory.forEach(msg => { historyPrompt += `${msg.role === 'bot' ? 'AI' : 'User'}: ${msg.text}\n`; });
+                const prompt = `Role-play as a ${persona}. Continue conversation based on history:\n${historyPrompt}\nYour response must be JSON with "botReplyKorean", "botReplyTranslation" in ${fullLanguageName}, "romanization", and "userSuggestions" array. Only return JSON.`;
+                const rawText = await callGemini(prompt); const data = parseJsonFromAiResponse(rawText);
+                thinkingBubble.remove(); conversationHistory.push({ role: 'bot', text: data.botReplyKorean }); displayBotMessage(data);
+            } catch (error) { thinkingBubble.textContent = `Error: ${error.message}`; }
+        }
+        function backToScenarios() { chatView.classList.add('hidden'); scenarioSelectionView.classList.remove('hidden'); }
+
+        // --- MY WORDS & FLASHCARD FUNCTIONS ---
+        function updateMyWordsCounter() { if (savedWords.length > 0) { myWordsCounter.textContent = savedWords.length; myWordsCounter.classList.remove('hidden'); } else { myWordsCounter.classList.add('hidden'); } }
+        function renderSavedWords() {
+            savedWordsListEl.innerHTML = '';
+            if (savedWords.length === 0) { noWordsMessage.style.display = 'block'; startFlashcardBtn.classList.add('hidden'); savedWordsListEl.classList.add('hidden'); } 
+            else { noWordsMessage.style.display = 'none'; startFlashcardBtn.classList.remove('hidden'); savedWordsListEl.classList.remove('hidden');
+                savedWords.forEach((word, index) => { const li = document.createElement('li'); li.className = 'flex items-center justify-between p-3 bg-white rounded-lg border'; li.innerHTML = `<div><p class="font-bold korean-text">${word.korean}</p><p class="text-sm text-gray-600">${word.translation}</p></div><button data-index="${index}" class="delete-word-btn text-gray-400 hover:text-red-500 text-sm"><i class="fa-solid fa-trash"></i></button>`; savedWordsListEl.appendChild(li); });
+            }
+        }
+        function startFlashcardSession() {
+            if (savedWords.length === 0) return; flashcardDeck = [...savedWords].sort(() => 0.5 - Math.random()); currentFlashcardIndex = 0;
+            wordListContainer.classList.add('hidden'); flashcardFinishedView.classList.add('hidden'); flashcardContainer.classList.remove('hidden'); displayFlashcard();
+        }
+        function displayFlashcard() {
+            if (currentFlashcardIndex >= flashcardDeck.length) { showFlashcardFinished(); return; }
+            const card = flashcardDeck[currentFlashcardIndex];
+            flashcardEl.classList.remove('flipped'); flashcardActionsInitial.classList.remove('hidden'); flashcardActionsFeedback.classList.add('hidden');
+            flashcardCounterEl.textContent = currentFlashcardIndex + 1; flashcardTotalEl.textContent = flashcardDeck.length;
+            flashcardKoreanEl.textContent = card.korean; flashcardTranslationEl.textContent = card.translation; flashcardRomanizationEl.textContent = card.romanization;
+        }
+        function nextFlashcard(isRepeat) { if (isRepeat) flashcardDeck.push(flashcardDeck[currentFlashcardIndex]); currentFlashcardIndex++; displayFlashcard(); }
+        function showFlashcardFinished() { flashcardContainer.classList.add('hidden'); flashcardFinishedView.classList.remove('hidden'); }
+
+    </script>
+</body>
+</html>
+
