@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"> <!-- Default to dark mode -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewSync - Multi-Platform Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles for 2025 UI Trend */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Soft gradient background for light mode */
+        html.light body {
+            background-color: #f9fafb;
+        }
+
+        /* Custom scrollbar for a modern look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background-color: #374151; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb:hover { background-color: #4b5563; }
+        .light ::-webkit-scrollbar-thumb { background-color: #d1d5db; border-radius: 10px; }
+        .light ::-webkit-scrollbar-thumb:hover { background-color: #9ca3af; }
+
+        /* Animation for video card entry */
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .video-card {
+            animation: scaleIn 0.3s ease-out forwards;
+        }
+
+        /* Invalid input shake animation */
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+        .shake-input {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        /* Soft gradient for buttons */
+        .btn-primary {
+            background-image: linear-gradient(to right, #3b82f6, #60a5fa);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px 0 rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <div id="app" class="min-h-screen flex flex-col items-center p-4 sm:p-6 lg:p-8">
+
+        <!-- Header Section -->
+        <header class="w-full max-w-7xl flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-3">
+                 <svg class="w-8 h-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V17.25m12.75 0v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V17.25m12.75 0h.008v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V17.25m-6 0h.008v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V17.25m6 0h.008v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V17.25m6-10.5h.008v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V6.75m6 0h.008v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V6.75m0 0h.008v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V6.75m0 0H6m6 0h.008v1.007a3 3 0 01-.375 1.5-3 3 0 01-5.25 0 3 3 0 01-.375-1.5V6.75" />
+                </svg>
+                <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">ViewSync</h1>
+            </div>
+            <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
+                <svg id="theme-icon-light" class="w-5 h-5 text-gray-800 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path><circle cx="12" cy="12" r="5"></circle></svg>
+                <svg id="theme-icon-dark" class="w-5 h-5 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="w-full max-w-7xl flex-grow">
+            <!-- Input and Controls -->
+            <div class="sticky top-4 z-10 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg mb-8">
+                <form id="add-video-form" class="flex flex-col sm:flex-row items-center gap-4">
+                    <div class="relative w-full">
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center space-x-1.5 text-gray-400">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8.021 1.252a.638.638 0 0 0-.54.095L4.12 3.467a.638.638 0 0 0-.297.437v7.026a.638.638 0 0 0 .297.437l3.36 2.122a.638.638 0 0 0 .54.095l3.36-2.122a.638.638 0 0 0 .297-.437V3.904a.638.638 0 0 0-.297-.437L8.021 1.252z"/></svg>
+                        </div>
+                        <input id="video-url-input" type="text" placeholder="Paste YouTube, Shorts, or TikTok link..." class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                    <button type="submit" class="w-full sm:w-auto flex-shrink-0 px-6 py-3 btn-primary text-white font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-transform duration-200 active:scale-95 flex items-center justify-center gap-2">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 9a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25V15a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V9z" clip-rule="evenodd" /></svg>
+                        <span>Add Video</span>
+                    </button>
+                </form>
+                <div id="global-controls" class="mt-4 flex flex-wrap items-center justify-end gap-3 hidden">
+                    <button id="pause-play-btn" class="px-4 py-2 bg-purple-500 text-white text-sm font-medium rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-900 transition-transform duration-200 active:scale-95">Pause All</button>
+                    <button id="mute-toggle-btn" class="px-4 py-2 bg-yellow-500 text-white text-sm font-medium rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-900 transition-transform duration-200 active:scale-95">Unmute All</button>
+                    <button id="refresh-all-btn" class="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900 transition-transform duration-200 active:scale-95">Refresh All</button>
+                    <button id="clear-all-btn" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900 transition-transform duration-200 active:scale-95">Clear All</button>
+                </div>
+            </div>
+
+            <!-- Video Grid -->
+            <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                 <!-- Empty State Message -->
+                <div id="empty-state" class="col-span-full text-center py-20 px-6">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2z" /></svg>
+                    <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-white">No videos added yet</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Paste a supported video link above to get started.</p>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer with Disclaimer -->
+        <footer class="w-full max-w-7xl mt-12 text-center text-xs text-gray-500 dark:text-gray-400 px-4">
+            <p class="font-semibold">Disclaimer:</p>
+            <p>This tool is for educational and experimental purposes only. Using automated methods to artificially increase view counts is against YouTube's & TikTok's Terms of Service. Use this application responsibly and at your own risk. The creator is not responsible for any consequences, including channel suspension.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const themeToggle = document.getElementById('theme-toggle'), themeIconLight = document.getElementById('theme-icon-light'), themeIconDark = document.getElementById('theme-icon-dark'),
+                  addVideoForm = document.getElementById('add-video-form'), videoUrlInput = document.getElementById('video-url-input'), videoGrid = document.getElementById('video-grid'),
+                  emptyState = document.getElementById('empty-state'), globalControls = document.getElementById('global-controls'), clearAllBtn = document.getElementById('clear-all-btn'),
+                  muteToggleBtn = document.getElementById('mute-toggle-btn'), refreshAllBtn = document.getElementById('refresh-all-btn'), pausePlayBtn = document.getElementById('pause-play-btn');
+            
+            let isMuted = true;
+            let isPaused = false;
+
+            // --- Theme Management ---
+            const applyTheme = (theme) => {
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+                document.documentElement.classList.toggle('light', theme === 'light');
+                themeIconLight.classList.toggle('hidden', theme === 'dark');
+                themeIconDark.classList.toggle('hidden', theme === 'light');
+            };
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(savedTheme);
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+            
+            // --- Video Management ---
+            const parseVideoUrl = (url) => {
+                const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
+                const tiktokRegex = /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/.*\/video\/(\d+)/;
+                
+                let match = url.match(youtubeRegex);
+                if (match) return { platform: 'youtube', id: match[1] };
+                
+                match = url.match(tiktokRegex);
+                if (match) return { platform: 'tiktok', id: match[1] };
+                
+                return null;
+            };
+            
+            const createVideoElement = (videoInfo) => {
+                if (videoInfo.platform === 'youtube') {
+                    const iframe = document.createElement('iframe');
+                    // Add origin and referrerpolicy for better simulation
+                    const src = `https://www.youtube.com/embed/${videoInfo.id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoInfo.id}&controls=0&origin=https://www.youtube.com`;
+                    iframe.src = src;
+                    iframe.width = '100%';
+                    iframe.height = '100%';
+                    iframe.frameBorder = '0';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                    iframe.setAttribute('referrerpolicy', 'no-referrer');
+                    return iframe;
+                } else if (videoInfo.platform === 'tiktok') {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = `https://www.tiktok.com/embed/v2/${videoInfo.id}`;
+                    iframe.width = '100%';
+                    iframe.height = '100%';
+                    iframe.frameBorder = '0';
+                    iframe.allow = 'autoplay;';
+                    iframe.setAttribute('referrerpolicy', 'no-referrer');
+                    return iframe;
+                }
+                return null;
+            }
+
+            const createVideoCard = (videoInfo) => {
+                const card = document.createElement('div');
+                card.className = 'video-card relative aspect-video bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden shadow-md border border-gray-200 dark:border-gray-700';
+                card.dataset.platform = videoInfo.platform;
+                card.dataset.videoId = videoInfo.id;
+                 if (videoInfo.platform === 'tiktok') {
+                    card.classList.add('!aspect-[9/16]', 'sm:!aspect-video');
+                }
+
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'w-full h-full';
+                card.appendChild(videoContainer);
+
+                if (!isPaused) {
+                    const videoElement = createVideoElement(videoInfo);
+                    if (videoElement) videoContainer.appendChild(videoElement);
+                }
+
+                const overlay = document.createElement('div');
+                overlay.className = 'absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-bold z-10 hidden';
+                overlay.textContent = 'Paused';
+                card.appendChild(overlay);
+
+                const statusIndicator = document.createElement('div');
+                statusIndicator.className = 'absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center p-1 z-20';
+                card.appendChild(statusIndicator);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'absolute top-2 right-2 z-20 p-1 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all opacity-50 hover:opacity-100';
+                removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`;
+                removeBtn.addEventListener('click', () => {
+                    clearInterval(card.refreshTimer);
+                    clearInterval(card.statusUpdater);
+                    card.remove();
+                    updateUIState();
+                });
+                card.appendChild(removeBtn);
+                videoGrid.appendChild(card);
+                
+                if (isPaused) {
+                    pauseCard(card);
+                } else {
+                    startCardTimers(card);
+                }
+            };
+
+            const startCardTimers = (card) => {
+                const minRefresh = 90; // 1.5 minutes
+                const maxRefresh = 180; // 3 minutes
+                let refreshIn = Math.floor(Math.random() * (maxRefresh - minRefresh + 1) + minRefresh);
+
+                const statusUpdater = setInterval(() => {
+                    if (card.parentElement) { // Check if card still exists
+                        const statusIndicator = card.querySelector('div:nth-of-type(2)');
+                        statusIndicator.textContent = `Refreshing in ${refreshIn}s...`;
+                        refreshIn--;
+                    } else {
+                        clearInterval(statusUpdater);
+                    }
+                }, 1000);
+                card.statusUpdater = statusUpdater;
+                
+                const refreshTimer = setTimeout(() => {
+                    refreshCard(card);
+                }, refreshIn * 1000);
+                card.refreshTimer = refreshTimer;
+            }
+            
+            const refreshCard = (card) => {
+                if (!card.parentElement) return;
+                const videoContainer = card.querySelector('div:first-of-type');
+                videoContainer.innerHTML = '';
+                const videoInfo = { platform: card.dataset.platform, id: card.dataset.videoId };
+                const videoElement = createVideoElement(videoInfo);
+                if (videoElement) videoContainer.appendChild(videoElement);
+
+                clearInterval(card.refreshTimer);
+                clearInterval(card.statusUpdater);
+                startCardTimers(card);
+            }
+
+            const pauseCard = (card) => {
+                clearInterval(card.refreshTimer);
+                clearInterval(card.statusUpdater);
+                card.querySelector('div:first-of-type').innerHTML = '';
+                card.querySelector('.absolute.inset-0').classList.remove('hidden');
+                card.querySelector('div:nth-of-type(2)').textContent = `Paused`;
+            };
+
+            const playCard = (card) => {
+                card.querySelector('.absolute.inset-0').classList.add('hidden');
+                refreshCard(card); // This also restarts the timers
+            }
+
+            const updateUIState = () => {
+                const videoCount = videoGrid.querySelectorAll('.video-card').length;
+                emptyState.classList.toggle('hidden', videoCount > 0);
+                globalControls.classList.toggle('hidden', videoCount === 0);
+            };
+            
+            const showInputError = () => {
+                videoUrlInput.classList.add('shake-input', 'border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                setTimeout(() => videoUrlInput.classList.remove('shake-input', 'border-red-500', 'focus:border-red-500', 'focus:ring-red-500'), 500);
+            };
+
+            addVideoForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const url = videoUrlInput.value.trim();
+                if (url) {
+                    const videoInfo = parseVideoUrl(url);
+                    if (videoInfo) {
+                        createVideoCard(videoInfo);
+                        videoUrlInput.value = '';
+                        updateUIState();
+                    } else {
+                       showInputError();
+                    }
+                }
+            });
+
+            // --- Global Controls ---
+            clearAllBtn.addEventListener('click', () => {
+                videoGrid.querySelectorAll('.video-card').forEach(card => {
+                    clearInterval(card.refreshTimer);
+                    clearInterval(card.statusUpdater);
+                });
+                videoGrid.innerHTML = ''; 
+                videoGrid.appendChild(emptyState); 
+                updateUIState();
+            });
+            
+            muteToggleBtn.addEventListener('click', () => {
+                isMuted = !isMuted;
+                muteToggleBtn.textContent = isMuted ? 'Unmute All' : 'Mute All';
+                videoGrid.querySelectorAll('.video-card').forEach(refreshCard);
+            });
+            
+            refreshAllBtn.addEventListener('click', () => {
+                videoGrid.querySelectorAll('.video-card').forEach(refreshCard);
+            });
+            
+            pausePlayBtn.addEventListener('click', () => {
+                isPaused = !isPaused;
+                pausePlayBtn.textContent = isPaused ? 'Play All' : 'Pause All';
+                videoGrid.querySelectorAll('.video-card').forEach(card => {
+                    if (isPaused) {
+                        pauseCard(card);
+                    } else {
+                        playCard(card);
+                    }
+                });
+            });
+
+            updateUIState();
+        });
+    </script>
+</body>
+</html>
+
